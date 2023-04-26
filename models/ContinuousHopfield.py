@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import cmath
 from scipy.special import softmax
 
 class ContinuousHopfield:
@@ -55,5 +56,8 @@ class ContinuousHopfield:
         beta_pow = pow(self.beta, -1)
         sum = 0
         for a in value:
-            sum = sum + np.log(self.beta * a)
-        return beta_pow * np.log(sum)[0]
+            holdover = self.beta * a[0]
+            holdover_log = cmath.log(holdover)
+            sum = sum + holdover_log
+        log_sum = cmath.log(sum)
+        return beta_pow * log_sum
