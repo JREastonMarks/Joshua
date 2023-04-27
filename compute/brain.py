@@ -47,12 +47,26 @@ class Brain:
         return action
 
     def update(self, observation, reward):
+        reward_array = np.zeros((4, 1))
+        reward_array[0][0] = reward
+        
         # last_observation * last_action + reward + observation
-        # oa = hrr.binding(self.last_observation, self.last_action)
-        # oar = hrr.binding(oa, reward)
-        # belief = hrr.binding(oar, observation)
-        pass
+        # nr = hrr.binding(hrr.projection(observation, axis=0), hrr.projection(reward_array, axis=0), axis=0)
+        # nra = hrr.binding(nr, hrr.projection(self.last_action, axis=0), axis=0)
+        # nrao = hrr.binding(nra, hrr.projection(self.last_observation, axis=0), axis=0)
+        oa = np.append(self.last_observation, self.last_action)
+        oar = np.append(oa, reward_array)
+        oarn = np.append(oar, observation)
+        # nrao = np.append(observation, [reward_array, self.last_action, self.last_observation])
+        sematic_belief = self.sematic.query(oarn, 10)
 
+        if sematic_belief is None:
+            self.sematic.train(oarn.reshape((16,1)))
+        else:
+            cosine_similarity = abs(1 - hrr.cosine_similarity(sematic_belief, oarn))
+            if(cosine_similarity > self.cosine_cutoff):
+                self.episodic.train(oarn.reshape((16,1)))
+                # sematic_belief = nrao
 
     def init_brain(self, observation):
         self.episodic.train(observation)

@@ -5,7 +5,7 @@ import numpy as np
 env = gym.make("CartPole-v1", render_mode="human")
 observation, info = env.reset()
 
-brain = Brain(episodic_size=4, sematic_size=4, beta=8, actions=env.action_space, cosine_cutoff=0.87)
+brain = Brain(episodic_size=4, sematic_size=16, beta=8, actions=env.action_space, cosine_cutoff=0.87)
 
 
 for _ in range(100):
