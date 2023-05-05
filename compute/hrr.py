@@ -82,7 +82,7 @@ def cosine_similarity_orig(x, y, axis=None, keepdims=None):
 def cosine_similarity(x, y):
     norm_x = np.linalg.norm(x)
     norm_y = np.linalg.norm(y)
-    return np.sum(norm_x * norm_y)
+    return np.sum(x * y) / (norm_x * norm_y)
 
 
 """ aliases """

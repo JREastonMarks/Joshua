@@ -10,11 +10,11 @@ class Brain:
         self.episodic_size = episodic_size
         self.sematic_size = sematic_size
         self.actions = actions
-        self.cosine_cutoff = 1 - cosine_cutoff
+        self.cosine_cutoff = float(cosine_cutoff)
         self.exploratory = exploratory
         self.search_depth = search_depth
 
-        self.gpg = GeneralizedPolicyGraph(self.episodic, self.sematic, actions, exploratory, search_depth, self.cosine_cutoff)
+        self.gpg = GeneralizedPolicyGraph(self.episodic, self.sematic, actions, exploratory, search_depth, cosine_cutoff)
         self.last_action = None
         self.last_observation = None
         
@@ -30,13 +30,13 @@ class Brain:
             episodic_observation = observation
         else:
             # Check to see if retrieved observation and observation are similar enough
-            cosine_similarity = abs(1 - hrr.cosine_similarity(episodic_observation, observation))
-            if(cosine_similarity < self.cosine_cutoff):
+            actual_similarity = hrr.cosine_similarity(episodic_observation, observation)
+            if(self.cosine_cutoff > actual_similarity):
                 self.episodic.train(observation)
                 episodic_observation = observation
         
         # Create Generalized Policy Graph
-        self.gpg.create(observation)
+        self.gpg.create(episodic_observation)
 
         # Get best action from graph
         action = self.gpg.best_action()
@@ -60,8 +60,8 @@ class Brain:
         if sematic_belief is None:
             self.sematic.train(oarn)
         else:
-            cosine_similarity = abs(1 - hrr.cosine_similarity(sematic_belief, oarn))
-            if(cosine_similarity > self.cosine_cutoff):
+            actual_similarity = hrr.cosine_similarity(sematic_belief, oarn)
+            if(self.cosine_cutoff > actual_similarity):
                 self.sematic.train(oarn)
 
     def init_brain(self, observation):
