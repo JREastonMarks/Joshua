@@ -10,11 +10,11 @@ class Brain:
         self.episodic_size = episodic_size
         self.sematic_size = sematic_size
         self.actions = actions
-        self.cosine_cutoff = cosine_cutoff
+        self.cosine_cutoff = 1 - cosine_cutoff
         self.exploratory = exploratory
         self.search_depth = search_depth
 
-        self.gpg = GeneralizedPolicyGraph(self.episodic, self.sematic, actions, exploratory, search_depth, cosine_cutoff)
+        self.gpg = GeneralizedPolicyGraph(self.episodic, self.sematic, actions, exploratory, search_depth, self.cosine_cutoff)
         self.last_action = None
         self.last_observation = None
         
@@ -31,7 +31,7 @@ class Brain:
         else:
             # Check to see if retrieved observation and observation are similar enough
             cosine_similarity = abs(1 - hrr.cosine_similarity(episodic_observation, observation))
-            if(cosine_similarity > self.cosine_cutoff):
+            if(cosine_similarity < self.cosine_cutoff):
                 self.episodic.train(observation)
                 episodic_observation = observation
         
@@ -46,27 +46,23 @@ class Brain:
 
         return action
 
-    def update(self, observation, reward):
+    def update(self, next_observation, reward):
         reward_array = np.zeros((4, 1))
         reward_array[0][0] = reward
         
-        # last_observation * last_action + reward + observation
-        # nr = hrr.binding(hrr.projection(observation, axis=0), hrr.projection(reward_array, axis=0), axis=0)
-        # nra = hrr.binding(nr, hrr.projection(self.last_action, axis=0), axis=0)
-        # nrao = hrr.binding(nra, hrr.projection(self.last_observation, axis=0), axis=0)
         oa = np.append(self.last_observation, self.last_action)
         oar = np.append(oa, reward_array)
-        oarn = np.append(oar, observation)
-        # nrao = np.append(observation, [reward_array, self.last_action, self.last_observation])
+        oarn = np.append(oar, next_observation)
+        oarn.resize(16, 1)
+
         sematic_belief = self.sematic.query(oarn, 10)
 
         if sematic_belief is None:
-            self.sematic.train(oarn.reshape((16,1)))
+            self.sematic.train(oarn)
         else:
             cosine_similarity = abs(1 - hrr.cosine_similarity(sematic_belief, oarn))
             if(cosine_similarity > self.cosine_cutoff):
-                self.episodic.train(oarn.reshape((16,1)))
-                # sematic_belief = nrao
+                self.sematic.train(oarn)
 
     def init_brain(self, observation):
         self.episodic.train(observation)

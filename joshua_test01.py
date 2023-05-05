@@ -8,9 +8,7 @@ observation, info = env.reset()
 brain = Brain(episodic_size=4, sematic_size=16, beta=8, actions=env.action_space, cosine_cutoff=0.87)
 
 
-for _ in range(100):
-    # action = env.action_space.sample()  # agent policy that uses the observation and info
-    
+for _ in range(100):    
     action = int(brain.step(observation)[0][0])
     observation, reward, terminated, truncated, info = env.step(action)
 
