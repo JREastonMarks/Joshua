@@ -1,6 +1,5 @@
 import gymnasium as gym
 from compute.brain import Brain
-import numpy as np
 
 env = gym.make("CartPole-v1", render_mode="human")
 observation, info = env.reset()
