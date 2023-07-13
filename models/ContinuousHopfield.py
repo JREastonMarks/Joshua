@@ -1,5 +1,5 @@
 import numpy as np
-import math
+import compute.hrr as hrr
 import cmath
 from scipy.special import softmax
 
@@ -8,22 +8,23 @@ class ContinuousHopfield:
         self.size = size
         self.beta = beta
         self.weights = None
+        self.memories = 0
 
     def train(self, pattern):
+        self.memories = self.memories + 1
         if self.weights is None:
             self.weights = pattern
         else:
             self.weights = np.append(self.weights, pattern, axis=1)
         
 
-    def query(self, query, maxIterations):
+    def query(self, query, max_iterations):
         if(self.weights is None):
             return None
         
         energy = self.energy_function(query)
 
-        for iteration in range(maxIterations):
-            # print(f'{iteration}:\t{query.transpose()}\t{energy}')
+        for iteration in range(max_iterations):
             query = self.update_rule(query)
             new_energy = self.energy_function(query)
 
@@ -31,7 +32,6 @@ class ContinuousHopfield:
                 break
             energy = new_energy
         
-        # print(f'end:\t {query.transpose()}')
         return query
     
     def update_rule(self, query):
@@ -39,6 +39,20 @@ class ContinuousHopfield:
         part02 = part01 @ query
         query = self.weights @ softmax(part02)
         return query
+    
+    def query_or_create(self, query, similarity_cutoff, max_iterations=10):
+        result = self.query(query, max_iterations)
+
+        if result is None:
+            self.train(query)
+            return query
+        
+        similarity_actual = abs(hrr.cosine_similarity(result, query))
+        if(similarity_actual < similarity_cutoff):
+            self.train(query)
+            return query
+        
+        return result
 
     def energy_function(self, query):
         if(self.weights is None):

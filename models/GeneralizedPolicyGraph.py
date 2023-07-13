@@ -41,19 +41,19 @@ class GeneralizedPolicyGraph:
         
         # Loop through all actions
         for a in range(self.actions.n):
-            action = np.zeros((4, 1))
+            action = np.zeros((2, 1))
             action[0][0] = a
             # Build query            
             oa_query = np.append(observation, action)
-            oa_query = np.append(oa_query, np.zeros(8))
-            oarn = self.sematic.query(oa_query.reshape((16,1)), 10)
+            oa_query = np.append(oa_query, np.zeros(4))
+            oarn = self.sematic.query(oa_query.reshape((8,1)), 10)
             if oarn is None:
                 continue
             oarn_split = np.array_split(oarn, 4)
 
             # Check to see if observation is similar enough
             actual_similarity = hrr.cosine_similarity(oarn_split[0], observation)
-            if(self.cosine_cutoff > actual_similarity):
+            if(actual_similarity < self.cosine_cutoff):
                 self.graph[observation_key][a] = {}
                 continue
 
@@ -81,7 +81,7 @@ class GeneralizedPolicyGraph:
     def best_action(self):
         # If graph is empty
         if len(self.graph.keys()) == 0:
-            returns = np.zeros((4, 1))
+            returns = np.zeros((2, 1))
             returns[0][0] = self.actions.sample()
             return returns
         
@@ -97,17 +97,17 @@ class GeneralizedPolicyGraph:
 
         # If empty then return a random action
         if(len(possible_actions) == 0):
-            returns = np.zeros((4, 1))
+            returns = np.zeros((2, 1))
             returns[0][0] = self.actions.sample()
             return returns
         # If an empty exists then check to see if exploration should be done
         if(len(empty_actions) > 0) and (random.random() < self.exploratory):
-            returns = np.zeros((4, 1))
+            returns = np.zeros((2, 1))
             returns[0][0] = random.choice(empty_actions)
             return returns
         
         # If not exploring then calculate the best route (exploitation)
-        returns = np.zeros((4, 1))
+        returns = np.zeros((2, 1))
         action_rewards = {}
         for possible_action in possible_actions:
             max_reward = self.traverse_graph(self.root[possible_action], self.search_depth)

@@ -14,26 +14,14 @@ class Brain:
         self.exploratory = exploratory
         self.search_depth = search_depth
 
-        self.gpg = GeneralizedPolicyGraph(self.episodic, self.sematic, actions, exploratory, search_depth, cosine_cutoff)
+        self.gpg = GeneralizedPolicyGraph(self.episodic, self.sematic, actions, exploratory, search_depth, float(cosine_cutoff))
         self.last_action = None
         self.last_observation = None
         
 
     def step(self, observation):
-        observation = observation.reshape((self.episodic_size, 1))
-        # Get observation
-        episodic_observation = self.episodic.query(observation, 10)
-
-        # If observation can not be found
-        if episodic_observation is None:
-            self.episodic.train(observation)
-            episodic_observation = observation
-        else:
-            # Check to see if retrieved observation and observation are similar enough
-            actual_similarity = hrr.cosine_similarity(episodic_observation, observation)
-            if(self.cosine_cutoff > actual_similarity):
-                self.episodic.train(observation)
-                episodic_observation = observation
+        observation = observation.reshape((self.episodic_size, 1))        
+        episodic_observation = self.episodic.query_or_create(observation, self.cosine_cutoff, max_iterations=10)
         
         # Create Generalized Policy Graph
         self.gpg.create(episodic_observation)
@@ -46,23 +34,20 @@ class Brain:
 
         return action
 
-    def update(self, next_observation, reward):
-        reward_array = np.zeros((4, 1))
+    def update(self, observation, reward):
+        observation = observation.reshape((self.episodic_size, 1))
+        next_observation = self.episodic.query_or_create(observation, self.cosine_cutoff, max_iterations=10)
+
+        reward_array = np.zeros((2, 1))
         reward_array[0][0] = reward
         
         oa = np.append(self.last_observation, self.last_action)
         oar = np.append(oa, reward_array)
         oarn = np.append(oar, next_observation)
-        oarn.resize(16, 1)
+        oarn.resize(self.sematic_size, 1)
 
-        sematic_belief = self.sematic.query(oarn, 10)
-
-        if sematic_belief is None:
-            self.sematic.train(oarn)
-        else:
-            actual_similarity = hrr.cosine_similarity(sematic_belief, oarn)
-            if(self.cosine_cutoff > actual_similarity):
-                self.sematic.train(oarn)
+        self.sematic.query_or_create(oarn, self.cosine_cutoff, max_iterations=10)
+        
 
     def init_brain(self, observation):
         self.episodic.train(observation)

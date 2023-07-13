@@ -1,7 +1,7 @@
 import gymnasium as gym
 from compute.brain import Brain
 
-env = gym.make("CartPole-v1", render_mode="human")
+env = gym.make("CartPole-v1")
 observation, info = env.reset()
 
 brain = Brain(episodic_size=4, sematic_size=16, beta=8, actions=env.action_space, cosine_cutoff=0.43, exploratory=.5)
