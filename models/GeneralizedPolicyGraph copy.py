@@ -3,14 +3,14 @@ import numpy as np
 import random
 
 class GeneralizedPolicyGraph:
-    def __init__(self, episodic, sematic, actions, exploratory,search_depth, euclidean_cutoff):
+    def __init__(self, episodic, sematic, actions, exploratory,search_depth, cosine_cutoff):
         self.graph = {}
         self.episodic = episodic
         self.sematic = sematic
         self.actions = actions
         self.exploratory = exploratory
         self.search_depth = search_depth
-        self.euclidean_cutoff = euclidean_cutoff
+        self.cosine_cutoff = cosine_cutoff
 
     def create(self, observation):
         self.graph = {}
@@ -52,8 +52,8 @@ class GeneralizedPolicyGraph:
             oarn_split = np.array_split(oarn, 4)
 
             # Check to see if observation is similar enough
-            euclidean_distance = np.linalg.norm(result - query)
-            if(euclidean_distance < self.euclidean_cutoff):
+            actual_similarity = hrr.cosine_similarity(oarn_split[0], observation)
+            if(actual_similarity < self.cosine_cutoff):
                 self.graph[observation_key][a] = {}
                 continue
 

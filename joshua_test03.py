@@ -1,18 +1,17 @@
 import gymnasium as gym
 from compute.brain import Brain
 import numpy as np
+import math
 
 def update_observation(observation):
-    returns = observation[2:]
-    returns[0] = np.rad2deg(returns[0])
-    return returns
+    return observation
 
 # f = open("cartpole-joshua.csv", "w")
 
 env = gym.make("CartPole-v1", render_mode="human")
 # env = gym.make("CartPole-v1")
 observation, info = env.reset()
-brain = Brain(episodic_size=2, sematic_size=8, beta=8, actions=env.action_space, cosine_cutoff=0.9, exploratory=.5)
+brain = Brain(episodic_size=4, sematic_size=16, beta=8, actions=env.action_space, euclidean_cutoff=0.5, exploratory=.1)
 
 max_steps = 0
 for i in range(100):

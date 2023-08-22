@@ -46,9 +46,10 @@ class ContinuousHopfield:
         if result is None:
             self.train(query)
             return query
+
+        euclidean_distance = np.linalg.norm(result - query)
         
-        similarity_actual = abs(hrr.cosine_similarity(result, query))
-        if(similarity_actual < similarity_cutoff):
+        if(euclidean_distance > similarity_cutoff):
             self.train(query)
             return query
         
